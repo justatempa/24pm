@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日历时间轴应用</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#818CF8',
+            neutral: '#F5F7FA',
+            dark: '#1E293B'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .timeline-line {
+        @apply absolute top-0 bottom-0 left-5 w-0.5 bg-secondary/30 -translate-x-1/2;
+      }
+      .timeline-dot {
+        @apply absolute left-5 w-3 h-3 rounded-full bg-primary -translate-x-1/2;
+      }
+      .calendar-day {
+        @apply aspect-square flex items-center justify-center rounded-full transition-all duration-200 cursor-pointer;
+      }
+      .calendar-day:hover:not(.calendar-day-disabled) {
+        @apply bg-primary/10;
+      }
+      .calendar-day-selected {
+        @apply bg-primary text-white;
+      }
+      .calendar-day-today {
+        @apply border-2 border-primary/50;
+      }
+      .calendar-day-disabled {
+        @apply text-gray-300 cursor-not-allowed;
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-neutral min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- 头部 -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark">
+        <i class="fa fa-calendar-check-o mr-2 text-primary"></i>日程记录
+      </h1>
+      
+      <!-- 日历组件 -->
+      <div class="bg-white rounded-xl shadow-lg p-4 w-full md:w-auto">
+        <div class="flex justify-between items-center mb-4">
+          <button id="prev-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+            <i class="fa fa-chevron-left text-gray-600"></i>
+          </button>
+          <h2 id="current-month" class="text-lg font-semibold text-dark"></h2>
+          <button id="next-month" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+            <i class="fa fa-chevron-right text-gray-600"></i>
+          </button>
+        </div>
+        
+        <!-- 星期标题 -->
+        <div class="grid grid-cols-7 gap-1 mb-2">
+          <div class="text-center text-sm font-medium text-gray-500">日</div>
+          <div class="text-center text-sm font-medium text-gray-500">一</div>
+          <div class="text-center text-sm font-medium text-gray-500">二</div>
+          <div class="text-center text-sm font-medium text-gray-500">三</div>
+          <div class="text-center text-sm font-medium text-gray-500">四</div>
+          <div class="text-center text-sm font-medium text-gray-500">五</div>
+          <div class="text-center text-sm font-medium text-gray-500">六</div>
+        </div>
+        
+        <!-- 日期网格 -->
+        <div id="calendar-days" class="grid grid-cols-7 gap-1"></div>
+      </div>
+    </header>
+    
+    <!-- 主内容区 -->
+    <main class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 id="current-date" class="text-xl font-semibold text-dark"></h2>
+        <button id="export-btn" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg">
+          <i class="fa fa-clipboard"></i>
+          <span>导出今日记录</span>
+        </button>
+      </div>
+      
+      <!-- 时间轴 -->
+      <div id="timeline" class="space-y-6 max-h-[50vh] overflow-y-auto pr-2">
+        <!-- 时间轴内容将通过JS动态生成 -->
+        <div class="text-center py-12 text-gray-500">
+          <i class="fa fa-clock-o text-4xl mb-3 text-gray-300"></i>
+          <p>今天还没有记录</p>
+        </div>
+      </div>
+    </main>
+    
+    <!-- 输入区域 -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="flex gap-3">
+        <input 
+          type="text" 
+          id="message-input" 
+          placeholder="输入消息..." 
+          class="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+        >
+        <button 
+          id="send-btn" 
+          class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+        >
+          <i class="fa fa-paper-plane"></i>
+          <span>发送</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 全局变量
+    let currentDate = new Date();
+    let selectedDate = new Date();
+    let records = {};
+    
+    // DOM元素
+    const currentMonthEl = document.getElementById('current-month');
+    const currentDateEl = document.getElementById('current-date');
+    const calendarDaysEl = document.getElementById('calendar-days');
+    const prevMonthBtn = document.getElementById('prev-month');
+    const nextMonthBtn = document.getElementById('next-month');
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const timelineEl = document.getElementById('timeline');
+    const exportBtn = document.getElementById('export-btn');
+    
+    // 初始化
+    function init() {
+      loadRecords();
+      renderCalendar();
+      updateCurrentDateDisplay();
+      renderTimeline();
+      setupEventListeners();
+      // 初始聚焦到输入框
+      messageInput.focus();
+    }
+    
+    // 加载本地存储中的记录
+    function loadRecords() {
+      const storedRecords = localStorage.getItem('timelineRecords');
+      if (storedRecords) {
+        records = JSON.parse(storedRecords);
+      }
+    }
+    
+    // 保存记录到本地存储
+    function saveRecords() {
+      localStorage.setItem('timelineRecords', JSON.stringify(records));
+    }
+    
+    // 渲染日历
+    function renderCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      
+      // 更新月份显示
+      currentMonthEl.textContent = `${year}年${month + 1}月`;
+      
+      // 清空日历
+      calendarDaysEl.innerHTML = '';
+      
+      // 获取当月第一天和最后一天
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      
+      // 获取当月第一天是星期几 (0-6)
+      const firstDayIndex = firstDay.getDay();
+      
+      // 获取上个月的最后几天
+      const prevMonthLastDay = new Date(year, month, 0).getDate();
+      
+      // 生成日历单元格
+      // 上个月的尾部日期
+      for (let i = firstDayIndex; i > 0; i--) {
+        const day = prevMonthLastDay - i + 1;
+        const date = new Date(year, month - 1, day);
+        const isToday = isSameDay(date, new Date());
+        const isSelected = isSameDay(date, selectedDate);
+        
+        const dayEl = createCalendarDay(day, date, true, isToday, isSelected);
+        calendarDaysEl.appendChild(dayEl);
+      }
+      
+      // 当月日期
+      for (let i = 1; i <= lastDay.getDate(); i++) {
+        const date = new Date(year, month, i);
+        const isToday = isSameDay(date, new Date());
+        const isSelected = isSameDay(date, selectedDate);
+        
+        const dayEl = createCalendarDay(i, date, false, isToday, isSelected);
+        calendarDaysEl.appendChild(dayEl);
+      }
+      
+      // 下个月的开头日期
+      const remainingDays = 42 - (firstDayIndex + lastDay.getDate());
+      if (remainingDays < 7) { // 确保至少有6行
+        for (let i = 1; i <= remainingDays + 7; i++) {
+          const date = new Date(year, month + 1, i);
+          const isToday = isSameDay(date, new Date());
+          const isSelected = isSameDay(date, selectedDate);
+          
+          const dayEl = createCalendarDay(i, date, true, isToday, isSelected);
+          calendarDaysEl.appendChild(dayEl);
+        }
+      }
+    }
+    
+    // 创建日历单元格
+    function createCalendarDay(day, date, isOtherMonth, isToday, isSelected) {
+      const dayEl = document.createElement('div');
+      dayEl.classList.add('calendar-day');
+      
+      if (isOtherMonth) {
+        dayEl.classList.add('calendar-day-disabled', 'text-gray-400');
+      } else {
+        dayEl.addEventListener('click', () => {
+          selectedDate = new Date(date);
+          renderCalendar();
+          updateCurrentDateDisplay();
+          renderTimeline();
+          // 切换日期后聚焦到输入框
+          messageInput.focus();
+        });
+      }
+      
+      if (isSelected) {
+        dayEl.classList.add('calendar-day-selected');
+      }
+      
+      if (isToday && !isSelected) {
+        dayEl.classList.add('calendar-day-today');
+      }
+      
+      dayEl.textContent = day;
+      
+      // 添加当天有记录的指示
+      const dateString = formatDate(date);
+      if (records[dateString] && records[dateString].length > 0 && !isOtherMonth) {
+        const indicator = document.createElement('div');
+        indicator.classList.add('absolute', 'bottom-1', 'w-1', 'h-1', 'rounded-full', 'bg-primary');
+        dayEl.classList.add('relative');
+        dayEl.appendChild(indicator);
+      }
+      
+      return dayEl;
+    }
+    
+    // 更新当前日期显示
+    function updateCurrentDateDisplay() {
+      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      currentDateEl.textContent = selectedDate.toLocaleDateString('zh-CN', options);
+    }
+    
+    // 渲染时间轴
+    function renderTimeline() {
+      const dateString = formatDate(selectedDate);
+      const dateRecords = records[dateString] || [];
+      
+      timelineEl.innerHTML = '';
+      
+      if (dateRecords.length === 0) {
+        timelineEl.innerHTML = `
+          <div class="text-center py-12 text-gray-500">
+            <i class="fa fa-clock-o text-4xl mb-3 text-gray-300"></i>
+            <p>今天还没有记录</p>
+          </div>
+        `;
+        return;
+      }
+      
+      dateRecords.forEach((record, index) => {
+        const recordEl = createTimelineItem(record, index === dateRecords.length - 1);
+        timelineEl.appendChild(recordEl);
+      });
+      
+      // 滚动到底部
+      timelineEl.scrollTop = timelineEl.scrollHeight;
+    }
+    
+    // 创建时间轴项目
+    function createTimelineItem(record, isLast) {
+      const itemEl = document.createElement('div');
+      itemEl.classList.add('relative', 'pl-12', 'pb-6');
+      
+      if (!isLast) {
+        const lineEl = document.createElement('div');
+        lineEl.classList.add('timeline-line');
+        itemEl.appendChild(lineEl);
+      }
+      
+      const dotEl = document.createElement('div');
+      dotEl.classList.add('timeline-dot', 'top-1');
+      itemEl.appendChild(dotEl);
+      
+      const contentEl = document.createElement('div');
+      contentEl.classList.add('bg-neutral', 'rounded-lg', 'p-4', 'shadow-sm');
+      
+      const timeEl = document.createElement('div');
+      timeEl.classList.add('text-sm', 'text-gray-500', 'mb-1');
+      timeEl.textContent = formatDateTime(new Date(record.timestamp));
+      
+      const messageEl = document.createElement('div');
+      messageEl.classList.add('text-dark');
+      messageEl.textContent = record.message;
+      
+      contentEl.appendChild(timeEl);
+      contentEl.appendChild(messageEl);
+      itemEl.appendChild(contentEl);
+      
+      return itemEl;
+    }
+    
+    // 添加新记录
+    function addRecord(message) {
+      const dateString = formatDate(selectedDate);
+      const timestamp = new Date().toISOString();
+      
+      if (!records[dateString]) {
+        records[dateString] = [];
+      }
+      
+      records[dateString].push({
+        message,
+        timestamp
+      });
+      
+      saveRecords();
+      renderTimeline();
+      // 发送后聚焦到输入框
+      messageInput.focus();
+    }
+    
+    // 导出当前日期的记录到剪贴板（只导出时间轴数据，不包含标题）
+    function exportRecords() {
+      const dateString = formatDate(selectedDate);
+      const dateRecords = records[dateString] || [];
+      
+      if (dateRecords.length === 0) {
+        showNotification('今天没有记录可导出', 'warning');
+        return;
+      }
+      
+      let textToCopy = '';
+      
+      dateRecords.forEach(record => {
+        textToCopy += `${formatDateTime(new Date(record.timestamp))}: ${record.message}\n`;
+      });
+      
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          showNotification('记录已复制到剪贴板', 'success');
+        })
+        .catch(err => {
+          console.error('复制失败: ', err);
+          showNotification('复制失败，请重试', 'error');
+        });
+    }
+    
+    // 显示通知
+    function showNotification(message, type = 'info') {
+      // 创建通知元素
+      const notification = document.createElement('div');
+      
+      // 设置样式
+      let bgColor, textColor, icon;
+      switch(type) {
+        case 'success':
+          bgColor = 'bg-green-500';
+          textColor = 'text-white';
+          icon = 'fa-check-circle';
+          break;
+        case 'error':
+          bgColor = 'bg-red-500';
+          textColor = 'text-white';
+          icon = 'fa-exclamation-circle';
+          break;
+        case 'warning':
+          bgColor = 'bg-yellow-500';
+          textColor = 'text-white';
+          icon = 'fa-exclamation-triangle';
+          break;
+        default:
+          bgColor = 'bg-blue-500';
+          textColor = 'text-white';
+          icon = 'fa-info-circle';
+      }
+      
+      notification.className = `${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 fixed bottom-4 right-4 z-50 transform transition-all duration-300 translate-y-20 opacity-0`;
+      notification.innerHTML = `<i class="fa ${icon}"></i> <span>${message}</span>`;
+      
+      // 添加到页面
+      document.body.appendChild(notification);
+      
+      // 显示通知
+      setTimeout(() => {
+        notification.classList.remove('translate-y-20', 'opacity-0');
+      }, 10);
+      
+      // 3秒后隐藏通知
+      setTimeout(() => {
+        notification.classList.add('translate-y-20', 'opacity-0');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+    }
+    
+    // 格式化日期 (yyyy-MM-dd)
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    // 格式化日期时间 (yyyy-MM-dd HH:mm:ss)
+    function formatDateTime(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+    
+    // 判断两个日期是否是同一天
+    function isSameDay(date1, date2) {
+      return date1.getFullYear() === date2.getFullYear() &&
+             date1.getMonth() === date2.getMonth() &&
+             date1.getDate() === date2.getDate();
+    }
+    
+    // 设置事件监听器
+    function setupEventListeners() {
+      // 上个月按钮
+      prevMonthBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+      });
+      
+      // 下个月按钮
+      nextMonthBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+      });
+      
+      // 输入框变化
+      messageInput.addEventListener('input', () => {
+        sendBtn.disabled = messageInput.value.trim().length === 0;
+      });
+      
+      // 发送按钮点击
+      sendBtn.addEventListener('click', () => {
+        const message = messageInput.value.trim();
+        if (message) {
+          addRecord(message);
+          messageInput.value = '';
+          sendBtn.disabled = true;
+        }
+      });
+      
+      // 输入框回车发送
+      messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendBtn.click();
+        }
+      });
+      
+      // 导出按钮点击
+      exportBtn.addEventListener('click', exportRecords);
+    }
+    
+    // 初始化应用
+    init();
+  </script>
+</body>
+</html>
+    
