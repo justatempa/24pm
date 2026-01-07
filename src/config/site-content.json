@@ -26,10 +26,6 @@
 		{
 			"id": "cat",
 			"url": "/images/art/cat.png"
-		},
-		{
-			"id": "a46372ff45bc5524",
-			"url": "/images/art/a46372ff45bc5524.jpg"
 		}
 	],
 	"currentArtImageId": "cat",
@@ -42,7 +38,7 @@
 	"currentBackgroundImageId": "",
 	"socialButtons": [],
 	"clockShowSeconds": false,
-	"summaryInContent": false,
+	"summaryInContent": true,
 	"isCachePem": false,
 	"hideEditButton": false,
 	"enableCategories": true,

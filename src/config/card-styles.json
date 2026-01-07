@@ -3,16 +3,16 @@
 		"width": 360,
 		"height": 200,
 		"order": 3,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": -177,
+		"offsetY": 23,
 		"enabled": true
 	},
 	"hiCard": {
 		"width": 360,
 		"height": 288,
 		"order": 1,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": -181,
+		"offsetY": -287,
 		"enabled": true
 	},
 	"clockCard": {
@@ -28,8 +28,8 @@
 		"width": 350,
 		"height": 286,
 		"order": 5,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": 202,
+		"offsetY": -223,
 		"enabled": true
 	},
 	"musicCard": {
@@ -45,32 +45,32 @@
 		"width": 315,
 		"height": 48,
 		"order": 6,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": -154,
+		"offsetY": 279,
 		"enabled": true
 	},
 	"shareCard": {
-		"width": 200,
-		"height": 180,
+		"width": 193,
+		"height": 163,
 		"order": 7,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": 219,
+		"offsetY": 88,
 		"enabled": true
 	},
 	"articleCard": {
 		"width": 266,
 		"height": 160,
 		"order": 8,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": -488,
+		"offsetY": 174,
 		"enabled": true
 	},
 	"writeButtons": {
 		"height": 42,
 		"width": 180,
 		"order": 8,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": 360,
+		"offsetY": -294,
 		"enabled": true
 	},
 	"navCard": {
