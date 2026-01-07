@@ -1,5 +1,15 @@
 [
   {
+    "slug": "software-blog",
+    "title": "又搞了个blog",
+    "tags": [],
+    "date": "2026-01-07T11:31",
+    "summary": "文章一篇没写，blog系统试了个遍",
+    "cover": "/blogs/software-blog/94dbcd0f997d7cf2.webp",
+    "hidden": false,
+    "category": "总结"
+  },
+  {
     "slug": "electric-border",
     "title": "电光边框效果",
     "tags": [
