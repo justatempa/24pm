@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	username TEXT NOT NULL UNIQUE COLLATE NOCASE,
 	password_hash TEXT NOT NULL,
+	nickname TEXT NOT NULL DEFAULT '',
 	is_admin INTEGER NOT NULL DEFAULT 0,
 	disabled INTEGER NOT NULL DEFAULT 0,
 	created_at TEXT NOT NULL
@@ -68,10 +69,21 @@ function openDb(): DatabaseSync {
 	// busy_timeout:next build 会用多个 worker 进程并发初始化,抢写锁时排队等待而非直接报错
 	db.exec('PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;')
 	db.exec(SCHEMA)
+	// 旧库升级:CREATE TABLE IF NOT EXISTS 不会给已有表加列,需 ALTER;并发 worker 同时 ALTER 会撞重复列,静默跳过
+	const cols = db.prepare('PRAGMA table_info(users)').all() as unknown as { name: string }[]
+	if (!cols.some(c => c.name === 'nickname')) {
+		try {
+			db.exec('ALTER TABLE users ADD COLUMN nickname TEXT NOT NULL DEFAULT \'\'')
+		} catch {
+			// 已被并发 worker 加过列
+		}
+	}
+	db.exec('UPDATE users SET nickname = username WHERE nickname = \'\'')
 	const row = db.prepare('SELECT COUNT(*) AS c FROM users').get() as { c: number }
 	if (row.c === 0) {
 		// OR IGNORE:并发 worker 同时种子管理员,username 唯一约束让后到者静默跳过
-		db.prepare('INSERT OR IGNORE INTO users (username, password_hash, is_admin, created_at) VALUES (?, ?, 1, ?)').run(
+		db.prepare('INSERT OR IGNORE INTO users (username, nickname, password_hash, is_admin, created_at) VALUES (?, ?, ?, 1, ?)').run(
+			'hello',
 			'hello',
 			hashPassword(process.env.ADMIN_PASSWORD || 'mm@9527'),
 			new Date().toISOString()

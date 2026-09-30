@@ -9,6 +9,7 @@ export type Post = {
 	id: number
 	userId: number
 	username: string
+	nickname: string
 	visibility: 'public' | 'private'
 	content: string
 	createdAt: string
@@ -21,6 +22,7 @@ type PostRow = {
 	id: number
 	user_id: number
 	username: string
+	nickname: string
 	visibility: string
 	content: string
 	created_at: string
@@ -60,6 +62,7 @@ function hydrate(rows: PostRow[]): Post[] {
 		id: r.id,
 		userId: r.user_id,
 		username: r.username,
+		nickname: r.nickname || r.username,
 		visibility: r.visibility === 'private' ? 'private' : 'public',
 		content: r.content,
 		createdAt: r.created_at,
@@ -73,7 +76,7 @@ export function listPublicPosts(page: number): { posts: Post[]; total: number } 
 	const total = (db.prepare(`SELECT COUNT(*) AS c FROM posts WHERE visibility = 'public'`).get() as { c: number }).c
 	const rows = db
 		.prepare(
-			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username
+			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username, u.nickname
 			 FROM posts p JOIN users u ON u.id = p.user_id
 			 WHERE p.visibility = 'public' ORDER BY p.id DESC LIMIT ? OFFSET ?`
 		)
@@ -85,7 +88,7 @@ export function listUserPosts(userId: number, page: number): { posts: Post[]; to
 	const total = (db.prepare('SELECT COUNT(*) AS c FROM posts WHERE user_id = ?').get(userId) as { c: number }).c
 	const rows = db
 		.prepare(
-			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username
+			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username, u.nickname
 			 FROM posts p JOIN users u ON u.id = p.user_id
 			 WHERE p.user_id = ? ORDER BY p.id DESC LIMIT ? OFFSET ?`
 		)
@@ -104,7 +107,7 @@ export function listTagPosts(tag: string, viewerId: number | null, page: number)
 	).c
 	const rows = db
 		.prepare(
-			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username
+			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username, u.nickname
 			 FROM posts p JOIN users u ON u.id = p.user_id
 			 JOIN post_tags pt ON pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id
 			 WHERE t.name = ? AND (p.visibility = 'public' OR p.user_id = ?)
@@ -151,7 +154,7 @@ export function getPostForViewer(id: number, viewer: { id: number } | null): Pos
 	if (!Number.isInteger(id)) return null
 	const row = db
 		.prepare(
-			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username
+			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username, u.nickname
 			 FROM posts p JOIN users u ON u.id = p.user_id WHERE p.id = ?`
 		)
 		.get(id) as unknown as PostRow | undefined
