@@ -111,5 +111,3 @@ export async function Shell({ children }: { children: React.ReactNode }) {
 		</>
 	)
 }
-
-export type { SessionUser }

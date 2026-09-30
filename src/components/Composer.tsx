@@ -9,7 +9,7 @@ const MAX_IMAGES = 9
 
 type Preview = { url: string; name: string }
 
-export function Composer({ from }: { from: 'home' | 'me' }) {
+export function Composer() {
 	const [state, action, pending] = useActionState(createPostAction, initialState)
 	const [previews, setPreviews] = useState<Preview[]>([])
 	const [charCount, setCharCount] = useState(0)
@@ -56,7 +56,6 @@ export function Composer({ from }: { from: 'home' | 'me' }) {
 
 	return (
 		<form key={key} action={action} className='composer card rise'>
-			<input type='hidden' name='from' value={from} />
 			<textarea
 				name='content'
 				rows={3}

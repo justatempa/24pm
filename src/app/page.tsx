@@ -13,7 +13,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 	return (
 		<>
 			{user ? (
-				<Composer from='home' />
+				<Composer />
 			) : (
 				<div className='notice card'>
 					这是一个私有微博,<Link href='/login'>登录</Link>后可以发帖。

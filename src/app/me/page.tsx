@@ -14,7 +14,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
 	return (
 		<>
-			<Composer from='me' />
+			<Composer />
 			<PostList posts={posts} viewer={user} empty='还没有发过帖子' />
 			<Pagination page={page} hasMore={page * 20 < total} basePath='/me' />
 		</>

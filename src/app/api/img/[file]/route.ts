@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { UPLOAD_DIR } from '@/lib/db'
 
@@ -10,7 +10,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
 	if (!NAME_RE.test(file)) return new Response('Not found', { status: 404 })
 	const full = path.join(UPLOAD_DIR, file)
 	try {
-		await stat(full)
 		const data = await readFile(full)
 		return new Response(new Uint8Array(data), {
 			headers: {
