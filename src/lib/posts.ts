@@ -1,6 +1,7 @@
 import { db } from './db'
 import { parseTags } from './content'
 import { saveImage, removeImage } from './images'
+import { commentSummaries, type CommentItem } from './comments'
 
 export const PAGE_SIZE = 20
 
@@ -16,6 +17,7 @@ export type Post = {
 	tags: string[]
 	images: PostImage[]
 	comments: number
+	previewComments: CommentItem[]
 }
 
 type PostRow = {
@@ -41,9 +43,7 @@ function hydrate(rows: PostRow[]): Post[] {
 	const imageRows = db
 		.prepare(`SELECT post_id AS pid, file, thumb, width, height FROM post_images WHERE post_id IN (${ph}) ORDER BY position, id`)
 		.all(...ids) as unknown as ImageRow[]
-	const commentRows = db
-		.prepare(`SELECT post_id AS pid, COUNT(*) AS c FROM comments WHERE post_id IN (${ph}) GROUP BY post_id`)
-		.all(...ids) as unknown as { pid: number; c: number }[]
+	const { counts: commentCount, previews: previewMap } = commentSummaries(ids)
 	const tagMap = new Map<number, string[]>()
 	for (const r of tagRows) {
 		const list = tagMap.get(r.pid) ?? []
@@ -56,8 +56,6 @@ function hydrate(rows: PostRow[]): Post[] {
 		list.push({ file: r.file, thumb: r.thumb, width: r.width, height: r.height })
 		imageMap.set(r.pid, list)
 	}
-	const commentMap = new Map<number, number>()
-	for (const r of commentRows) commentMap.set(r.pid, r.c)
 	return rows.map(r => ({
 		id: r.id,
 		userId: r.user_id,
@@ -68,7 +66,8 @@ function hydrate(rows: PostRow[]): Post[] {
 		createdAt: r.created_at,
 		tags: tagMap.get(r.id) ?? [],
 		images: imageMap.get(r.id) ?? [],
-		comments: commentMap.get(r.id) ?? 0
+		comments: commentCount.get(r.id) ?? 0,
+		previewComments: previewMap.get(r.id) ?? []
 	}))
 }
 
@@ -239,9 +238,4 @@ export function deletePost(postId: number, actor: { id: number; isAdmin: boolean
 	db.prepare('DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM post_tags)').run()
 	for (const img of images) removeImage(img.file, img.thumb)
 	return true
-}
-
-export function getPostImageFile(name: string): string | null {
-	if (!/^[0-9a-f]{16}(_t)?\.webp$/.test(name)) return null
-	return name
 }

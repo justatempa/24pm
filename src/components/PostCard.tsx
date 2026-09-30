@@ -7,22 +7,27 @@ import type { Post } from '@/lib/posts'
 import type { SessionUser } from '@/lib/auth'
 import type { CSSProperties } from 'react'
 import { deletePostAction } from '@/actions/posts'
+import { PostComments } from './PostComments'
 
 export function PostCard({
 	post,
 	viewer,
 	delay,
-	first
+	first,
+	detail
 }: {
 	post: Post
 	viewer: SessionUser | null
 	delay?: CSSProperties
 	first?: boolean
+	detail?: boolean
 }) {
 	const canDelete = viewer && (viewer.id === post.userId || viewer.isAdmin)
 	const gridClass = post.images.length >= 3 ? 'cols-3' : post.images.length === 2 ? 'cols-2' : 'cols-1'
 	return (
 		<article className={first ? 'post first rise' : 'post rise'} style={delay}>
+			{/* 列表页:整卡覆盖链接,点正文进详情;图片/标签/评论区等交互元素浮在其上 */}
+			{!detail && <Link href={`/p/${post.id}`} className='post-cover' aria-label='查看帖子详情' />}
 			<header className='post-head'>
 				<span className='post-author'>@{post.nickname}</span>
 				{post.visibility === 'private' && (
@@ -62,12 +67,16 @@ export function PostCard({
 					))}
 				</div>
 			)}
-			<div className='post-foot'>
-				<Link className='post-comments' href={`/p/${post.id}`}>
-					<ChatCircle size={15} />
-					{post.comments > 0 ? `${post.comments} 条评论` : '评论'}
-				</Link>
-			</div>
+			{detail ? (
+				<div className='post-foot'>
+					<a className='post-comments' href='#comments'>
+						<ChatCircle size={15} />
+						{post.comments > 0 ? `${post.comments} 条评论` : '评论'}
+					</a>
+				</div>
+			) : (
+				<PostComments postId={post.id} total={post.comments} preview={post.previewComments} viewer={viewer} />
+			)}
 		</article>
 	)
 }

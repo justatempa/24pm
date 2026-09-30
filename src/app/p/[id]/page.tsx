@@ -4,7 +4,8 @@ import { notFound } from 'next/navigation'
 import { Trash } from '@phosphor-icons/react/dist/ssr'
 import { getSessionUser } from '@/lib/auth'
 import { getPostForViewer } from '@/lib/posts'
-import { listComments, renderComment } from '@/lib/comments'
+import { listComments } from '@/lib/comments'
+import { renderContent } from '@/lib/content'
 import { formatTime } from '@/lib/format'
 import { PostCard } from '@/components/PostCard'
 import { CommentForm } from '@/components/CommentForm'
@@ -27,8 +28,8 @@ export default async function PostPage({ params }: Props) {
 
 	return (
 		<>
-			<PostCard post={post} viewer={viewer} first />
-			<section className='comments'>
+			<PostCard post={post} viewer={viewer} first detail />
+			<section className='comments' id='comments'>
 				<h2 className='comments-title'>{comments.length > 0 ? `${comments.length} 条评论` : '评论'}</h2>
 				{comments.length > 0 && (
 					<ul className='comment-list'>
@@ -50,7 +51,7 @@ export default async function PostPage({ params }: Props) {
 											</form>
 										)}
 									</header>
-									<div className='comment-content'>{renderComment(c.content)}</div>
+									<div className='comment-content'>{renderContent(c.content)}</div>
 								</li>
 							)
 						})}

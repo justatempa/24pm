@@ -3,11 +3,19 @@
 import { revalidatePath } from 'next/cache'
 import { getSessionUser } from '@/lib/auth'
 import { getPostForViewer } from '@/lib/posts'
-import { addComment, deleteComment } from '@/lib/comments'
+import { addComment, deleteComment, listComments, type CommentItem } from '@/lib/comments'
 
 export type CommentFormState = { error: string; ok: boolean }
 
 const MAX_CONTENT = 500
+
+// 内联“查看更多”用:返回帖子全部评论;帖子不可见返回空
+export async function fetchCommentsAction(postId: number): Promise<CommentItem[]> {
+	const user = await getSessionUser()
+	const post = getPostForViewer(postId, user)
+	if (!post) return []
+	return listComments(postId)
+}
 
 export async function createCommentAction(_prev: CommentFormState, formData: FormData): Promise<CommentFormState> {
 	const user = await getSessionUser()
@@ -25,8 +33,7 @@ export async function createCommentAction(_prev: CommentFormState, formData: For
 
 	addComment(postId, user.id, content)
 	revalidatePath(`/p/${postId}`)
-	revalidatePath('/')
-	revalidatePath('/me')
+	revalidatePath('/', 'layout')
 	return { error: '', ok: true }
 }
 
@@ -38,7 +45,6 @@ export async function deleteCommentAction(formData: FormData): Promise<void> {
 	const postId = deleteComment(id, { id: user.id, isAdmin: user.isAdmin })
 	if (postId !== null) {
 		revalidatePath(`/p/${postId}`)
-		revalidatePath('/')
-		revalidatePath('/me')
+		revalidatePath('/', 'layout')
 	}
 }
