@@ -175,18 +175,12 @@ button {
 
 /* ---------- 移动版外壳 ---------- */
 
-.shell-mobile .topbar {
+.topbar-m {
 	height: 50px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	padding: 0 16px;
-}
-
-.shell-mobile .main {
-	max-width: 100%;
-	padding: 14px 14px calc(84px + env(safe-area-inset-bottom));
-	gap: 12px;
 }
 
 .tabbar {
@@ -228,6 +222,27 @@ button {
 .tabbar .tab.active,
 .tabbar button:active {
 	color: var(--accent);
+}
+
+/* 桌面/移动导航同时渲染,按视口宽度切换,避免 UA 嗅探漏掉 iPad、桌面模式等场景 */
+.chrome-m {
+	display: none;
+}
+
+@media (max-width: 768px) {
+	.chrome-d {
+		display: none;
+	}
+
+	.chrome-m {
+		display: flex;
+	}
+
+	.main {
+		max-width: 100%;
+		padding: 14px 14px calc(84px + env(safe-area-inset-bottom));
+		gap: 12px;
+	}
 }
 
 /* ---------- 通用元素 ---------- */

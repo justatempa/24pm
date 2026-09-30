@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { detectShell, Shell } from '@/components/Shells'
+import { Shell } from '@/components/Shells'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -16,11 +16,10 @@ export const viewport: Viewport = {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-	const variant = await detectShell()
 	return (
 		<html lang='zh-CN'>
 			<body>
-				<Shell variant={variant}>{children}</Shell>
+				<Shell>{children}</Shell>
 			</body>
 		</html>
 	)

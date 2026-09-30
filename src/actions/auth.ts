@@ -1,6 +1,6 @@
 'use server'
 
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { verifyPassword } from '@/lib/password'
@@ -22,10 +22,13 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
 	if (row.disabled) return { error: '该账户已被禁用' }
 
 	const jar = await cookies()
+	// Secure cookie 在纯 HTTP 下会被浏览器直接丢弃,导致登录后 session 存不住;
+	// 这里跟随请求实际协议:HTTPS 反代会带 x-forwarded-proto: https,直连 HTTP 则不带
+	const proto = (await headers()).get('x-forwarded-proto')?.split(',')[0].trim()
 	jar.set(SESSION_COOKIE, createSessionToken(row.id), {
 		httpOnly: true,
 		sameSite: 'lax',
-		secure: process.env.NODE_ENV === 'production',
+		secure: proto === 'https',
 		path: '/',
 		maxAge: MAX_AGE_S
 	})
