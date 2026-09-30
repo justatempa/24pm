@@ -15,7 +15,7 @@ type Props = { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	const { id } = await params
 	const post = getPostForViewer(Number(id), null)
-	return { title: post ? `@${post.username}:${post.content.slice(0, 24) || '[图片]'}` : '帖子' }
+	return { title: post ? `@${post.nickname}:${post.content.slice(0, 24) || '[图片]'}` : '帖子' }
 }
 
 export default async function PostPage({ params }: Props) {
@@ -37,7 +37,7 @@ export default async function PostPage({ params }: Props) {
 							return (
 								<li key={c.id} className='comment'>
 									<header className='comment-head'>
-										<span className='comment-author'>@{c.username}</span>
+										<span className='comment-author'>@{c.nickname}</span>
 										<time className='post-time' dateTime={c.createdAt}>
 											{formatTime(c.createdAt)}
 										</time>
