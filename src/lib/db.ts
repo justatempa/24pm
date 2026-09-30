@@ -57,7 +57,14 @@ CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id, id);
 
 function openDb(): DatabaseSync {
 	mkdirSync(UPLOAD_DIR, { recursive: true })
-	const db = new DatabaseSync(path.join(DATA_DIR, 'app.db'))
+	const dbFile = path.join(DATA_DIR, 'app.db')
+	let db: DatabaseSync
+	try {
+		db = new DatabaseSync(dbFile)
+	} catch (err) {
+		console.error(`SQLite 打开失败: ${dbFile} (DATA_DIR=${DATA_DIR}, 请检查目录是否存在/可写、磁盘是否已满)`, err)
+		throw err
+	}
 	db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;')
 	db.exec(SCHEMA)
 	const row = db.prepare('SELECT COUNT(*) AS c FROM users').get() as { c: number }

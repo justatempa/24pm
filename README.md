@@ -46,6 +46,11 @@ pnpm build
 SESSION_SECRET=随机长字符串 DATA_DIR=/var/lib/24pm pnpm start
 ```
 
+Docker 部署注意事项(见 `.github/workflows/deploy-main.yml`):
+
+- **seccomp**:老系统(如 CentOS 7)的 libseccomp < 2.4 会拦截 SQLite 依赖的 `pwritev2` 系统调用,报 `disk I/O error (errcode 778)`,必须以 `--security-opt seccomp=unconfined` 运行容器;升级服务器系统或 libseccomp 后可去掉
+- **sharp**:Next standalone 配合 pnpm 会漏掉 sharp 的平台二进制(`@img/*`),Dockerfile 里已通过整份拷贝生产 `node_modules` 解决
+
 ## 结构
 
 ```

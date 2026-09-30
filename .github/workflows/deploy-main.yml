@@ -54,15 +54,20 @@ jobs:
 
             mkdir -p "$APP_DIR/data"
 
+            OLD_IMAGE_IDS="$(docker images 24pm --format '{{.ID}}' | sort -u)"
+
             docker load -i "$IMAGE_ARCHIVE"
 
             if docker ps -a --format '{{.Names}}' | grep -q "^${APP_NAME}$"; then
               docker rm -f "$APP_NAME"
             fi
 
+            # 服务器 libseccomp 过旧(2.3.1)会拦截 SQLite 依赖的 pwritev2 系统调用,
+            # 造成 "disk I/O error"(errcode 778);服务器升级系统/ libseccomp 后可去掉此参数
             docker run -d \
               --name "$APP_NAME" \
               --restart unless-stopped \
+              --security-opt seccomp=unconfined \
               -p "${PORT}:3000" \
               -v "$APP_DIR/data:/app/data" \
               -e DATA_DIR=/app/data \
@@ -71,3 +76,23 @@ jobs:
               24pm:latest
 
             rm -f "$IMAGE_ARCHIVE"
+
+            # 冒烟测试:首页 SSR 会触发 SQLite 建库,失败则打印日志并让本次部署判定失败
+            for i in 1 2 3 4 5; do
+              sleep 2
+              if curl -fsS "http://127.0.0.1:${PORT}/" >/dev/null 2>&1; then
+                echo "smoke test passed"
+                break
+              fi
+              if [ "$i" = 5 ]; then
+                docker logs --tail 100 "$APP_NAME" || true
+                echo "smoke test failed: container did not serve / on port ${PORT}" >&2
+                exit 1
+              fi
+            done
+
+            # 每轮部署 load 进一个新镜像,旧的 24pm:<sha> 会一直留在磁盘上,不清理迟早撑满磁盘
+            if [ -n "$OLD_IMAGE_IDS" ]; then
+              docker rmi $OLD_IMAGE_IDS >/dev/null 2>&1 || true
+            fi
+            docker image prune -f >/dev/null 2>&1 || true
