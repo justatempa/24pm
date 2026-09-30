@@ -65,11 +65,13 @@ function openDb(): DatabaseSync {
 		console.error(`SQLite 打开失败: ${dbFile} (DATA_DIR=${DATA_DIR}, 请检查目录是否存在/可写、磁盘是否已满)`, err)
 		throw err
 	}
-	db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;')
+	// busy_timeout:next build 会用多个 worker 进程并发初始化,抢写锁时排队等待而非直接报错
+	db.exec('PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;')
 	db.exec(SCHEMA)
 	const row = db.prepare('SELECT COUNT(*) AS c FROM users').get() as { c: number }
 	if (row.c === 0) {
-		db.prepare('INSERT INTO users (username, password_hash, is_admin, created_at) VALUES (?, ?, 1, ?)').run(
+		// OR IGNORE:并发 worker 同时种子管理员,username 唯一约束让后到者静默跳过
+		db.prepare('INSERT OR IGNORE INTO users (username, password_hash, is_admin, created_at) VALUES (?, ?, 1, ?)').run(
 			'hello',
 			hashPassword(process.env.ADMIN_PASSWORD || 'mm@9527'),
 			new Date().toISOString()
