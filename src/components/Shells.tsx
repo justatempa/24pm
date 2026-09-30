@@ -28,7 +28,7 @@ export async function Shell({ variant, children }: { variant: ShellVariant; chil
 			<div className='app shell-mobile'>
 				<header className='topbar'>
 					{brand()}
-					{user && <span className='nav-user'>@{user.username}</span>}
+					{user && <span className='nav-user'>@{user.nickname}</span>}
 				</header>
 				<main className='main'>{children}</main>
 				<nav className='tabbar'>
@@ -89,7 +89,7 @@ export async function Shell({ variant, children }: { variant: ShellVariant; chil
 						</form>
 						{user ? (
 							<>
-								<span className='nav-user'>@{user.username}</span>
+								<span className='nav-user'>@{user.nickname}</span>
 								<form action={logoutAction}>
 									<button type='submit' className='icon-btn' aria-label='退出登录' title='退出'>
 										<SignOut size={16} />

@@ -10,6 +10,7 @@ export function AdminCreateForm() {
 			<h2>创建用户</h2>
 			<div className='admin-create-row'>
 				<input name='username' placeholder='用户名' required minLength={2} maxLength={20} />
+				<input name='nickname' placeholder='昵称(留空默认用户名)' maxLength={20} />
 				<input type='password' name='password' placeholder='初始密码(至少 6 位)' required minLength={6} />
 				<button type='submit' className='btn btn-primary' disabled={pending}>
 					{pending ? '创建中…' : '创建'}

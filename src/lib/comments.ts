@@ -6,6 +6,7 @@ export type CommentItem = {
 	postId: number
 	userId: number
 	username: string
+	nickname: string
 	content: string
 	createdAt: string
 }
@@ -15,6 +16,7 @@ type CommentRow = {
 	post_id: number
 	user_id: number
 	username: string
+	nickname: string
 	content: string
 	created_at: string
 }
@@ -22,7 +24,7 @@ type CommentRow = {
 export function listComments(postId: number): CommentItem[] {
 	const rows = db
 		.prepare(
-			`SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, u.username
+			`SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, u.username, u.nickname
 			 FROM comments c JOIN users u ON u.id = c.user_id
 			 WHERE c.post_id = ? ORDER BY c.id`
 		)
@@ -32,6 +34,7 @@ export function listComments(postId: number): CommentItem[] {
 		postId: r.post_id,
 		userId: r.user_id,
 		username: r.username,
+		nickname: r.nickname || r.username,
 		content: r.content,
 		createdAt: r.created_at
 	}))

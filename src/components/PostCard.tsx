@@ -24,7 +24,7 @@ export function PostCard({
 	return (
 		<article className={first ? 'post first rise' : 'post rise'} style={delay}>
 			<header className='post-head'>
-				<span className='post-author'>@{post.username}</span>
+				<span className='post-author'>@{post.nickname}</span>
 				{post.visibility === 'private' && (
 					<span className='badge-private' title='仅自己可见'>
 						<LockSimple size={11} weight='fill' />

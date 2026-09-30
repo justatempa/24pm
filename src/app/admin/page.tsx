@@ -7,13 +7,13 @@ import { toggleUserDisabledAction } from '@/actions/admin'
 
 export const metadata: Metadata = { title: '管理' }
 
-type UserRow = { id: number; username: string; is_admin: number; disabled: number; created_at: string; posts: number }
+type UserRow = { id: number; username: string; nickname: string; is_admin: number; disabled: number; created_at: string; posts: number }
 
 export default async function AdminPage() {
 	const admin = await requireAdmin()
 	const users = db
 		.prepare(
-			`SELECT u.id, u.username, u.is_admin, u.disabled, u.created_at, COUNT(p.id) AS posts
+			`SELECT u.id, u.username, u.nickname, u.is_admin, u.disabled, u.created_at, COUNT(p.id) AS posts
 			 FROM users u LEFT JOIN posts p ON p.user_id = u.id
 			 GROUP BY u.id ORDER BY u.id`
 		)
@@ -28,6 +28,7 @@ export default async function AdminPage() {
 					<thead>
 						<tr>
 							<th>用户名</th>
+							<th>昵称</th>
 							<th>角色</th>
 							<th>帖子</th>
 							<th>状态</th>
@@ -39,6 +40,7 @@ export default async function AdminPage() {
 						{users.map(u => (
 							<tr key={u.id} className={u.disabled ? 'row-disabled' : ''}>
 								<td>{u.username}</td>
+								<td>{u.nickname || u.username}</td>
 								<td>{u.is_admin ? '管理员' : '用户'}</td>
 								<td>{u.posts}</td>
 								<td>{u.disabled ? <span className='badge badge-disabled'>已禁用</span> : <span className='badge badge-ok'>正常</span>}</td>

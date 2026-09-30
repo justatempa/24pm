@@ -10,6 +10,7 @@ const MAX_AGE_S = 30 * 24 * 3600
 export type SessionUser = {
 	id: number
 	username: string
+	nickname: string
 	isAdmin: boolean
 }
 
@@ -41,11 +42,11 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 	if (!token) return null
 	const userId = verifySessionToken(token)
 	if (userId === null) return null
-	const row = db.prepare('SELECT id, username, is_admin, disabled FROM users WHERE id = ?').get(userId) as
-		| { id: number; username: string; is_admin: number; disabled: number }
+	const row = db.prepare('SELECT id, username, nickname, is_admin, disabled FROM users WHERE id = ?').get(userId) as
+		| { id: number; username: string; nickname: string; is_admin: number; disabled: number }
 		| undefined
 	if (!row || row.disabled) return null
-	return { id: row.id, username: row.username, isAdmin: row.is_admin === 1 }
+	return { id: row.id, username: row.username, nickname: row.nickname || row.username, isAdmin: row.is_admin === 1 }
 }
 
 export async function requireUser(): Promise<SessionUser> {
