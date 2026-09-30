@@ -785,6 +785,141 @@ button {
 	background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
+/* ---------- 搜索 ---------- */
+
+.search-form {
+	padding: 14px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.search-row {
+	display: flex;
+	gap: 8px;
+}
+
+.search-row input {
+	flex: 1;
+	min-width: 0;
+	border: 1px solid var(--border);
+	border-radius: var(--r-ui);
+	background: var(--surface-2);
+	color: var(--text);
+	padding: 9px 12px;
+	font-size: 14.5px;
+	outline: none;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.search-row input:focus {
+	border-color: var(--accent);
+	background: var(--surface);
+}
+
+.search-row input::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+}
+
+.search-tag {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 13px;
+	color: var(--muted);
+}
+
+.search-tag select {
+	flex: 1;
+	min-width: 0;
+	border: 1px solid var(--border);
+	border-radius: var(--r-ui);
+	background: var(--surface-2);
+	color: var(--text);
+	padding: 8px 10px;
+	font-size: 14px;
+	outline: none;
+	transition: border-color 0.15s ease;
+}
+
+.search-tag select:focus {
+	border-color: var(--accent);
+}
+
+.search-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 0 2px;
+}
+
+.chip {
+	font-size: 12.5px;
+	color: var(--muted);
+	background: var(--surface-2);
+	padding: 3px 12px;
+	border-radius: 99px;
+	transition: color 0.15s ease, background 0.15s ease;
+}
+
+.chip:hover {
+	text-decoration: none;
+	color: var(--text);
+}
+
+.chip.active {
+	color: var(--on-accent);
+	background: var(--accent);
+}
+
+.search-count {
+	font-family: var(--font-mono);
+	font-size: 12px;
+	color: var(--faint);
+	padding: 0 2px;
+}
+
+.nav-search {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.nav-search input {
+	width: 150px;
+	border: 1px solid var(--border);
+	border-radius: var(--r-ui);
+	background: var(--surface-2);
+	color: var(--text);
+	padding: 6px 10px;
+	font-size: 13px;
+	outline: none;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.nav-search input:focus {
+	border-color: var(--accent);
+	background: var(--surface);
+}
+
+.nav-search-btn {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border: 1px solid var(--border);
+	border-radius: var(--r-ui);
+	background: var(--surface-2);
+	color: var(--muted);
+	cursor: pointer;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.nav-search-btn:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
 /* ---------- 评论 ---------- */
 
 .post-foot {

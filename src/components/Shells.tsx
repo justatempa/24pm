@@ -1,6 +1,6 @@
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import { GearSix, House, SignIn, SignOut, User } from '@phosphor-icons/react/dist/ssr'
+import { GearSix, House, MagnifyingGlass, SignIn, SignOut, User } from '@phosphor-icons/react/dist/ssr'
 import { getSessionUser, type SessionUser } from '@/lib/auth'
 import { logoutAction } from '@/actions/auth'
 import { NavLink } from './NavLink'
@@ -35,6 +35,10 @@ export async function Shell({ variant, children }: { variant: ShellVariant; chil
 					<NavLink href='/' className='tab'>
 						<House size={20} />
 						<span>公开</span>
+					</NavLink>
+					<NavLink href='/search' className='tab'>
+						<MagnifyingGlass size={20} />
+						<span>搜索</span>
 					</NavLink>
 					{user && (
 						<NavLink href='/me' className='tab'>
@@ -77,6 +81,12 @@ export async function Shell({ variant, children }: { variant: ShellVariant; chil
 						{user?.isAdmin && <NavLink href='/admin'>管理</NavLink>}
 					</nav>
 					<div className='nav-side'>
+						<form action='/search' method='get' className='nav-search'>
+							<input type='search' name='q' placeholder='搜索便签…' maxLength={100} aria-label='搜索便签' />
+							<button type='submit' className='nav-search-btn' aria-label='搜索'>
+								<MagnifyingGlass size={14} weight='bold' />
+							</button>
+						</form>
 						{user ? (
 							<>
 								<span className='nav-user'>@{user.username}</span>

@@ -114,6 +114,70 @@ export function listTagPosts(tag: string, viewerId: number | null, page: number)
 	return { posts: hydrate(rows), total }
 }
 
+export type SearchRange = '7d' | '30d' | '1y'
+
+const RANGE_DAYS: Record<SearchRange, number> = { '7d': 7, '30d': 30, '1y': 365 }
+
+// LIKE 通配符转义,查询时须带 ESCAPE '\'
+function escapeLike(text: string): string {
+	return text.replace(/[\\%_]/g, ch => `\\${ch}`)
+}
+
+export function searchPosts(opts: {
+	q?: string
+	tag?: string
+	range?: SearchRange
+	viewerId: number | null
+	page: number
+}): { posts: Post[]; total: number } {
+	const where = [`(p.visibility = 'public' OR p.user_id = ?)`]
+	const params: (string | number)[] = [opts.viewerId ?? -1]
+
+	// 多个关键字取交集;每个关键字命中正文或标签名都算
+	const keywords = (opts.q ?? '').split(/\s+/).filter(Boolean).slice(0, 5)
+	for (const kw of keywords) {
+		where.push(
+			`(p.content LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM post_tags kpt JOIN tags kt ON kt.id = kpt.tag_id WHERE kpt.post_id = p.id AND kt.name LIKE ? ESCAPE '\\'))`
+		)
+		const pattern = `%${escapeLike(kw)}%`
+		params.push(pattern, pattern)
+	}
+	if (opts.tag) {
+		where.push(`EXISTS (SELECT 1 FROM post_tags tpt JOIN tags tt ON tt.id = tpt.tag_id WHERE tpt.post_id = p.id AND tt.name = ?)`)
+		params.push(opts.tag)
+	}
+	if (opts.range) {
+		// created_at 是 UTC ISO 字符串,字典序即时间序
+		where.push(`p.created_at >= ?`)
+		params.push(new Date(Date.now() - RANGE_DAYS[opts.range] * 86400_000).toISOString())
+	}
+
+	const whereSql = where.join(' AND ')
+	const total = (db.prepare(`SELECT COUNT(*) AS c FROM posts p WHERE ${whereSql}`).get(...params) as { c: number }).c
+	const rows = db
+		.prepare(
+			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username
+			 FROM posts p JOIN users u ON u.id = p.user_id
+			 WHERE ${whereSql}
+			 ORDER BY p.id DESC LIMIT ? OFFSET ?`
+		)
+		.all(...params, PAGE_SIZE, (opts.page - 1) * PAGE_SIZE) as unknown as PostRow[]
+	return { posts: hydrate(rows), total }
+}
+
+// 标签下拉选项:按可见帖使用次数倒序
+export function listTagOptions(viewerId: number | null): { name: string; c: number }[] {
+	return db
+		.prepare(
+			`SELECT t.name, COUNT(*) AS c FROM tags t
+			 JOIN post_tags pt ON pt.tag_id = t.id
+			 JOIN posts p ON p.id = pt.post_id
+			 WHERE p.visibility = 'public' OR p.user_id = ?
+			 GROUP BY t.id ORDER BY c DESC, t.name`
+		)
+		.all(viewerId ?? -1) as unknown as { name: string; c: number }[]
+}
+
 export async function createPost(opts: {
 	userId: number
 	content: string
