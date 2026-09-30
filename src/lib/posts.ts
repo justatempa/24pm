@@ -159,7 +159,7 @@ export function searchPosts(opts: {
 	const total = (db.prepare(`SELECT COUNT(*) AS c FROM posts p WHERE ${whereSql}`).get(...params) as { c: number }).c
 	const rows = db
 		.prepare(
-			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username
+			`SELECT p.id, p.user_id, p.visibility, p.content, p.created_at, u.username, u.nickname
 			 FROM posts p JOIN users u ON u.id = p.user_id
 			 WHERE ${whereSql}
 			 ORDER BY p.id DESC LIMIT ? OFFSET ?`
