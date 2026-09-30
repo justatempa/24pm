@@ -1,15 +1,27 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
+import { detectShell, Shell } from '@/components/Shells'
 import './globals.css'
 
 export const metadata: Metadata = {
-	title: '你好',
-	description: '一个最小的 Next.js 站点'
+	title: {
+		default: '24pm',
+		template: '%s · 24pm'
+	},
+	description: '个人微博'
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export const viewport: Viewport = {
+	width: 'device-width',
+	initialScale: 1
+}
+
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+	const variant = await detectShell()
 	return (
 		<html lang='zh-CN'>
-			<body>{children}</body>
+			<body>
+				<Shell variant={variant}>{children}</Shell>
+			</body>
 		</html>
 	)
 }

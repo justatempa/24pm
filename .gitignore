@@ -46,3 +46,5 @@ next-env.d.ts
 
 #vscode
 .history/
+# 本地数据(SQLite 数据库与上传图片)
+/data

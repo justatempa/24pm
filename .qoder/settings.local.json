@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /d/ai/24pm && echo \"---\" && ls -la /d/ai/shotsync/.github/workflows/ 2>/dev/null || ls -la /d/ai/shotsync 2>/dev/null)",
+      "Read(//d/ai/shotsync/.github/workflows/**)",
+      "Bash(ls /d/ai/24pm/src /d/ai/24pm/data 2>/dev/null && echo \"---git---\" && git -C /d/ai/24pm remote -v && git -C /d/ai/24pm log --oneline -3 && echo \"---gitignore---\" && cat /d/ai/24pm/.gitignore)",
+      "Bash(head -3 /d/ai/24pm/pnpm-lock.yaml && pnpm --version 2>/dev/null || echo \"pnpm not found locally\")",
+      "Bash(docker --version 2>/dev/null && docker info --format '{{.ServerVersion}}' 2>/dev/null || echo \"DOCKER_UNAVAILABLE\")",
+      "Bash(pnpm build 2>&1 | tail -20 && echo \"---standalone---\" && ls .next/standalone/ 2>/dev/null && ls .next/standalone/node_modules 2>/dev/null | head -10)",
+      "Bash(git:*)"
+    ]
+  }
+}

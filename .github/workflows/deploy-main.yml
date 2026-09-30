@@ -1,0 +1,73 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-24pm
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t 24pm:${{ github.sha }} \
+            -t 24pm:latest \
+            .
+
+      - name: Export image as archive
+        run: docker save 24pm:latest | gzip > 24pm-image.tar.gz
+
+      - name: Upload image archive to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 104.225.159.103
+          username: root
+          port: 28022
+          key: ${{ secrets.SSH_KEY }}
+          source: 24pm-image.tar.gz
+          target: /tmp
+
+      - name: Load image and restart container on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 104.225.159.103
+          username: root
+          port: 28022
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -euo pipefail
+
+            APP_NAME="24pm"
+            APP_DIR="/opt/24pm"
+            IMAGE_ARCHIVE="/tmp/24pm-image.tar.gz"
+            PORT=3001
+
+            mkdir -p "$APP_DIR/data"
+
+            docker load -i "$IMAGE_ARCHIVE"
+
+            if docker ps -a --format '{{.Names}}' | grep -q "^${APP_NAME}$"; then
+              docker rm -f "$APP_NAME"
+            fi
+
+            docker run -d \
+              --name "$APP_NAME" \
+              --restart unless-stopped \
+              -p "${PORT}:3000" \
+              -v "$APP_DIR/data:/app/data" \
+              -e DATA_DIR=/app/data \
+              -e SESSION_SECRET="${{ secrets.SESSION_SECRET }}" \
+              -e ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
+              24pm:latest
+
+            rm -f "$IMAGE_ARCHIVE"
