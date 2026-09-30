@@ -782,6 +782,46 @@ button {
 	opacity: 0.5;
 }
 
+/* 管理后台昵称编辑:点击昵称展开小表单,平时不占视觉 */
+.nick-set summary {
+	list-style: none;
+	cursor: pointer;
+	color: var(--accent);
+}
+
+.nick-set summary::-webkit-details-marker {
+	display: none;
+}
+
+.nick-set summary:hover {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.nick-set form {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 6px;
+}
+
+.nick-set input {
+	width: 110px;
+	border: 1px solid var(--border);
+	border-radius: var(--r-ui);
+	background: var(--surface-2);
+	color: var(--text);
+	padding: 4px 8px;
+	font-size: 13px;
+	outline: none;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.nick-set input:focus {
+	border-color: var(--accent);
+	background: var(--surface);
+}
+
 .badge {
 	display: inline-block;
 	font-size: 12px;

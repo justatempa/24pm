@@ -38,3 +38,14 @@ export async function toggleUserDisabledAction(formData: FormData): Promise<void
 	db.prepare('UPDATE users SET disabled = ? WHERE id = ?').run(disabled, id)
 	revalidatePath('/admin')
 }
+
+export async function updateUserNicknameAction(formData: FormData): Promise<void> {
+	const admin = await getSessionUser()
+	if (!admin?.isAdmin) return
+	const id = Number(formData.get('id'))
+	const nickname = String(formData.get('nickname') ?? '').trim()
+	if (!Number.isInteger(id) || nickname.length > 20) return
+	db.prepare('UPDATE users SET nickname = ? WHERE id = ?').run(nickname, id)
+	revalidatePath('/admin')
+	revalidatePath('/', 'layout') // 昵称显示在导航和帖子里
+}

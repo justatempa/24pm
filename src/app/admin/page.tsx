@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 import { formatTime } from '@/lib/format'
 import { AdminCreateForm } from '@/components/AdminCreateForm'
-import { toggleUserDisabledAction } from '@/actions/admin'
+import { toggleUserDisabledAction, updateUserNicknameAction } from '@/actions/admin'
 
 export const metadata: Metadata = { title: '管理' }
 
@@ -40,7 +40,16 @@ export default async function AdminPage() {
 						{users.map(u => (
 							<tr key={u.id} className={u.disabled ? 'row-disabled' : ''}>
 								<td>{u.username}</td>
-								<td>{u.nickname || u.username}</td>
+								<td>
+									<details className='nick-set'>
+										<summary title='点击修改昵称'>{u.nickname || u.username}</summary>
+										<form action={updateUserNicknameAction}>
+											<input type='hidden' name='id' value={u.id} />
+											<input name='nickname' defaultValue={u.nickname || u.username} maxLength={20} aria-label={`${u.username} 的昵称`} />
+											<button type='submit' className='btn-link'>保存</button>
+										</form>
+									</details>
+								</td>
 								<td>{u.is_admin ? '管理员' : '用户'}</td>
 								<td>{u.posts}</td>
 								<td>{u.disabled ? <span className='badge badge-disabled'>已禁用</span> : <span className='badge badge-ok'>正常</span>}</td>
